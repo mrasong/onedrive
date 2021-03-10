@@ -10,7 +10,6 @@ import (
 // OneDriveDirectLink const
 const (
 	URLTemplate string = "https://1drv.ms/%s/s!%s"
-	RequestUA   string = "Mozilla/5.0 (Macintosh; Intel Mac OS X 11_2_3) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/89.0.4389.72 Safari/537.36 Edg/89.0.774.45"
 )
 
 // OneDrive struct
@@ -50,28 +49,27 @@ func (o *OneDrive) GetDirectLink() string {
 
 // handler url parse
 func (o *OneDrive) handler() error {
+	request := func(method, url string) *http.Request {
+		req, _ := http.NewRequest(method, url, nil)
+		req.Header.Add("Accept", "text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,image/apng,*/*;q=0.8,application/signed-exchange;v=b3;q=0.9")
+		req.Header.Add("Accept-Language", "zh-CN,zh;q=0.9,en;q=0.8,zh-TW;q=0.7,ja;q=0.6")
+		req.Header.Add("Connection", "keep-alive")
+		req.Header.Add("User-Agent", "Mozilla/5.0 (Macintosh; Intel Mac OS X 11_2_3) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/88.0.4324.192 Safari/537.36")
+		return req
+	}
+
 	log.Println("original url: ", o.URL)
 
 	// step 1
 	// get temp url
-	req1, _ := http.NewRequest("HEAD", o.URL, nil)
-	req1.Header.Add("User-Agent", RequestUA)
-	res1, err := o.Client.Do(req1)
-	if err != nil {
-		log.Println("res1 URL: ", err)
-		return err
-	}
-	log.Println(res1.Location())
-
-	// step 1
-	// get temp url
-	r1, err := o.Client.Head(o.URL)
+	r1, err := o.Client.Do(request("HEAD", o.URL))
 	if err != nil {
 		log.Println("r1: ", err)
 		return err
 	}
+	defer r1.Body.Close()
 	log.Println(r1.Header)
-	tempURL, err := res1.Location()
+	tempURL, err := r1.Location()
 	if err != nil {
 		log.Println("tempURL error: ", err)
 		return err
@@ -85,13 +83,12 @@ func (o *OneDrive) handler() error {
 
 	// step 3
 	// get direct URL
-	req2, _ := http.NewRequest("HEAD", downloadURL, nil)
-	req2.Header.Add("User-Agent", RequestUA)
-	r2, err := http.DefaultClient.Do(req2)
+	r2, err := o.Client.Do(request("HEAD", downloadURL))
 	if err != nil {
 		log.Println("r2: ", err)
 		return err
 	}
+	defer r2.Body.Close()
 
 	directURL, err := r2.Location()
 	if err != nil {
