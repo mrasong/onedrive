@@ -10,6 +10,7 @@ import (
 // OneDriveDirectLink const
 const (
 	URLTemplate string = "https://1drv.ms/%s/s!%s"
+	RequestUA   string = "Mozilla/5.0 (Macintosh; Intel Mac OS X 11_2_3) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/89.0.4389.72 Safari/537.36 Edg/89.0.774.45"
 )
 
 // OneDrive struct
@@ -53,7 +54,9 @@ func (o *OneDrive) handler() error {
 
 	// step 1
 	// get temp url
-	res1, err := o.Client.Head(o.URL)
+	req1, _ := http.NewRequest("HEAD", o.URL, nil)
+	req1.Header.Add("User-Agent", RequestUA)
+	res1, err := o.Client.Do(req1)
 	if err != nil {
 		log.Println("res1 URL: ", err)
 		return err
@@ -82,7 +85,9 @@ func (o *OneDrive) handler() error {
 
 	// step 3
 	// get direct URL
-	r2, err := o.Client.Head(downloadURL)
+	req2, _ := http.NewRequest("HEAD", downloadURL, nil)
+	req2.Header.Add("User-Agent", RequestUA)
+	r2, err := http.DefaultClient.Do(req2)
 	if err != nil {
 		log.Println("r2: ", err)
 		return err
