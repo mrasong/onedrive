@@ -83,7 +83,7 @@ func (o *OneDrive) handler() error {
 
 	// step 3
 	// get direct URL
-	r2, err := o.Client.Do(request("HEAD", downloadURL))
+	r2, err := o.Client.Do(request("GET", downloadURL))
 	if err != nil {
 		log.Println("r2: ", err)
 		return err
